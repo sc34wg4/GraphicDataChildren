@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="OOXMLNamespaces.fs" />
+    <Compile Include="EnumerateOoxmlFiles.fs" />
+    <Compile Include="ReportRegistry.fs" />
+    <Compile Include="ScanOoxmlFile.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>
