@@ -7,7 +7,7 @@ open ReportRegistry
 
     
 let scanComputer sw =
-    for ooxmlFileInfo in  allOoxmlFilesOnThisComputer1 () do
+    for ooxmlFileInfo in  allOoxmlFilesOnThisComputer () do
         scanOOXML (ooxmlFileInfo.FullName) sw
     
 [<EntryPoint>]
@@ -17,7 +17,7 @@ let main argv =
     File.Delete(allPath)
     use outputFileStream = File.OpenWrite(allPath)
     use sw = new StreamWriter(outputFileStream)
-    sw.WriteLine("URI,QName")
+    sw.WriteLine("uri,qname,count")
     let (registerer, registryPrinter) = createRegistry()
     scanComputer registerer
     registryPrinter sw
