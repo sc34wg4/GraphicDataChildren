@@ -3,19 +3,32 @@ open System.Collections.Generic
 
 
 let createRegistry() =
-    let dict = new Dictionary<string*string*bool,int>();
-    let registerer (uri: string) (qname: string) strictFlag =
+    let countDict = new Dictionary<string*string*bool,int>();
+    let fileNameDict = new Dictionary<string*string*bool,Set<string>>();
+    let registerer (uri: string) (qname: string) fileName strictFlag =
         let key = (uri, qname, strictFlag)
-        match dict.TryGetValue key with
+        match countDict.TryGetValue key with
         | true, c  ->
-            dict.[key] <- c + 1
+            countDict.[key] <- c + 1
         | false,_ ->
-            dict.[key] <- 1
+            countDict.[key] <- 1
+        match fileNameDict.TryGetValue key with
+        | true, st  ->
+            fileNameDict.[key] <- Set.add fileName st
+        | false,_ ->
+            fileNameDict.[key] <- Set.singleton fileName
     let registryPrinter sw =
-        for KeyValue((uri, qname, strictFlag), count) in dict do 
+        let sortedKVs = 
+            [for kv in countDict -> kv] 
+            |> List.sortBy (fun (kv: KeyValuePair<_,_>) -> - kv.Value)
+        for KeyValue((uri, qname, strictFlag), count) in sortedKVs do 
             if strictFlag then
-                fprintfn sw "!%s,%s,%d" uri qname count
+                fprintf sw "!%s,%s,%d" uri qname count
             else 
-                fprintfn sw "%s,%s,%d" uri qname count
+                fprintf sw "%s,%s,%d" uri qname count
+            if count < 10 then
+                for fn in fileNameDict.[(uri, qname, strictFlag)] do
+                    fprintf sw ", %s" fn
+            sw.WriteLine()
     (registerer, registryPrinter)
     

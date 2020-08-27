@@ -15,16 +15,16 @@ let getQName (reader: XmlReader) =
         prefix +  ":" + reader.LocalName
 
 
-let printQnameWhenGraphicDataChild qname  registerer stack =
+let printQnameWhenGraphicDataChild qname fileName registerer stack =
     match stack with
     | uri::"s-a:graphicData"::_  ->
-        registerer uri qname true
+        registerer uri qname fileName true
     | uri::"t-a:graphicData"::_ ->
-        registerer uri qname false
+        registerer uri qname fileName false
     | _ -> ()
 
 
-let rec readElement (reader: XmlReader)  registerer stack =
+let rec readElement (reader: XmlReader) fileName  registerer stack =
     let mutable endFlag = false
     while not(endFlag) && reader.Read() do
         match reader.NodeType with
@@ -32,12 +32,12 @@ let rec readElement (reader: XmlReader)  registerer stack =
             if reader.IsEmptyElement then
                     if reader.NamespaceURI <> mceNamespace then 
                         let qname = getQName reader
-                        printQnameWhenGraphicDataChild qname registerer stack
+                        printQnameWhenGraphicDataChild qname fileName registerer stack 
             else 
                 let newStack =
                     if reader.NamespaceURI <> mceNamespace then 
                         let qname = getQName reader
-                        printQnameWhenGraphicDataChild qname registerer stack
+                        printQnameWhenGraphicDataChild qname fileName registerer stack
                         match getQName(reader) with 
                         | "s-a:graphicData" | "t-a:graphicData" as xx -> 
                             let uri = reader.GetAttribute("uri")
@@ -45,13 +45,13 @@ let rec readElement (reader: XmlReader)  registerer stack =
                         | x -> x::stack
                     else 
                         stack
-                readElement reader registerer newStack
+                readElement reader fileName registerer newStack
         | XmlNodeType.EndElement -> 
             endFlag <- true
         | _ -> ()
 
 
-let readDocument (entry: ZipArchiveEntry)   registerer  =
+let readDocument (entry: ZipArchiveEntry)  fileName registerer  =
     try
         use stream = entry.Open()
         use sr = new StreamReader(stream)
@@ -59,7 +59,7 @@ let readDocument (entry: ZipArchiveEntry)   registerer  =
         while not(reader.NodeType = XmlNodeType.Element) && reader.Read() do ()
 
         [getQName(reader)]
-        |> readElement reader registerer 
+        |> readElement reader fileName registerer 
      with
         | e -> ()
 
@@ -71,7 +71,7 @@ let scanOOXML zipFileName registerer =
         let entries = zipArchive.Entries
         for entry in entries do
                 if entry.Name.EndsWith(".xml") then
-                    readDocument  entry  registerer
+                    readDocument  entry zipFileName registerer
      with
         | e -> ()
 
